@@ -7,7 +7,7 @@
 # for getting a PulseChain Testnet (V4) Validator Node setup and running.
 #
 # Usage
-# $ ./pulsechain-testnet-validator-setup.sh [0x...YOUR ETHEREUM FEE ADDRESS] [12.89...YOUR SERVER IP ADDRESS]
+# $ ./pulsechain-testnet-validator-setup.sh [0x...YOUR ETHEREUM FEE ADDRESS] [12.89...YOUR SERVER IP ADDRESS] [2404:6800..V6 IP]
 #
 # Command line options
 # - ETHEREUM FEE ADDRESS is the FEE_RECIPIENT value for --suggested-fee-recipient to a wallet address you want
@@ -36,7 +36,7 @@
 #
 
 # initial check for script arguments (eth address and IP options)
-if [ -z "$2" ]; then
+if [ -z "$3" ]; then
     echo "* requires eth address and IP args, read the script notes and try again"
     exit 1
 fi
@@ -45,7 +45,7 @@ fi
 NODE_USER="node"
 FEE_RECIPIENT=$1
 SERVER_IP_ADDRESS=$2
-
+SERVER_IPv6_ADDRESS=$3
 APT_PACKAGES="build-essential cmake clang git wget jq protobuf-compiler"
 
 # chain flags
@@ -55,6 +55,7 @@ LIGHTHOUSE_CHAIN="pulsechain_testnet_v4"
 # geth config
 GETH_DIR="/opt/geth"
 GETH_DATA="/opt/geth/data"
+GETH_BIN="/opt/geth/bin"
 
 GETH_REPO="https://gitlab.com/pulsechaincom/go-pulse.git"
 GETH_REPO_NAME="go-pulse"
@@ -63,14 +64,17 @@ JWT_SECRET_DIR="/var/lib/jwt"
 
 # lighthouse config
 LIGHTHOUSE_DIR="/opt/lighthouse"
-LIGHTHOUSE_BEACON_DATA="/opt/lighthouse/data/beacon"
-LIGHTHOUSE_VALIDATOR_DATA="/opt/lighthouse/data/validator"
+LIGHTHOUSE_BIN_DIR="/opt/lighthouse/bin"
+LIGHTHOUSE_BEACON_DATA="/opt/lighthouse/data"
+LIGHTHOUSE_BEACON_LOG_DIR="/opt/lighthouse/logs/beacon"
+LIGHTHOUSE_VALIDATOR_DATA="/opt/lighthouse/data"
 LIGHTHOUSE_WALLET_DATA="/opt/lighthouse/wallet"
 
 LIGHTHOUSE_REPO="https://gitlab.com/pulsechaincom/lighthouse-pulse.git"
 LIGHTHOUSE_REPO_NAME="lighthouse-pulse"
 
 LIGHTHOUSE_PORT=9000
+LIGHTHOUSE_6PORT=9090 # Define it here even it's the default option
 LIGHTHOUSE_CHECKPOINT_URL="https://checkpoint.v4.testnet.pulsechain.com"
 
 ################################################################
@@ -118,15 +122,16 @@ sudo chmod 400 $JWT_SECRET_DIR/secret
 
 echo -e "\nstep 3: setting up and running Go-Pulse (execution client) to start syncing data\n"
 
-# erigon setup
+# geth setup
 git clone $GETH_REPO
 sleep 0.5 # ugh, wait
-sudo mv $GETH_REPO_NAME $GETH_DIR
-cd $GETH_DIR
+cd $GETH_REPO_NAME
 make
+mkdir -p $GETH_DIR
+mv $GETH_REPO_NAME/build/bin $GETH_DIR
 
 # add geth to path
-export PATH=$PATH:$GETH_DIR/build/bin
+#export PATH=$PATH:$GETH_DIR/bin
 
 # geth data directory
 mkdir -p $GETH_DATA
@@ -144,11 +149,12 @@ Group=$NODE_USER
 Type=simple
 Restart=always
 RestartSec=5
-ExecStart=$GETH_DIR/build/bin/geth \
+ExecStart=$GETH_BIN/geth \
 --$GETH_CHAIN \
 --datadir=$GETH_DATA \
 --http \
 --http.api=engine,eth,net,admin,debug \
+--cache=128 \
 --authrpc.jwtsecret=$JWT_SECRET_DIR/secret\
 
 
@@ -173,18 +179,20 @@ popd
 cd ~
 git clone $LIGHTHOUSE_REPO
 sleep 0.5 # ugh, wait
-sudo mv $LIGHTHOUSE_REPO_NAME $LIGHTHOUSE_DIR
-cd $LIGHTHOUSE_DIR
+cd $LIGHTHOUSE_REPO_NAME
 make
+sudo mkdir -p $LIGHTHOUSE_BIN_DIR
+sudo mv ~/.cargo/bin/lighthouse $LIGHTHOUSE_BIN_DIR
 
-# setup lighthouse beacon data, validator data and wallet directories
+# setup lighthouse beacon data and log, validator data and wallet directories
+sudo mkdir -p $LIGHTHOUSE_BEACON_LOG_DIR
 sudo mkdir -p $LIGHTHOUSE_VALIDATOR_DATA
 sudo mkdir -p $LIGHTHOUSE_WALLET_DATA
 
 sudo chown -R $NODE_USER:$NODE_USER $LIGHTHOUSE_DIR
 
 # make symbolic link to lighthouse (make service binary in ExecStart nicer)
-sudo -u $NODE_USER ln -s /home/$NODE_USER/.cargo/bin/lighthouse /opt/lighthouse/lighthouse/lh
+# sudo -u $NODE_USER ln -s /home/$NODE_USER/.cargo/bin/lighthouse /opt/lighthouse/lighthouse/lh
 
 sudo tee /etc/systemd/system/lighthouse-beacon.service > /dev/null <<EOT
 [Unit]
@@ -198,14 +206,25 @@ Group=$NODE_USER
 Type=simple
 Restart=always
 RestartSec=5
-ExecStart=$LIGHTHOUSE_DIR/lighthouse/lh bn \
+ExecStart=$LIGHTHOUSE_BIN_DIR/lighthouse beacon \
 --network $LIGHTHOUSE_CHAIN \
 --datadir=$LIGHTHOUSE_BEACON_DATA \
 --execution-endpoint=http://localhost:8551 \
 --execution-jwt=$JWT_SECRET_DIR/secret \
 --enr-address=$SERVER_IP_ADDRESS \
+--enr-address=$SERVER_IPv6_ADDRESS \
 --enr-tcp-port=$LIGHTHOUSE_PORT \
 --enr-udp-port=$LIGHTHOUSE_PORT \
+--enr-tcp6-port=$LIGHTHOUSE_6PORT \
+--enr-udp6-port=$LIGHTHOUSE_6PORT \
+--listen-address '0.0.0.0' \
+--listen-address '::' \
+--logfile=$LIGHTHOUSE_BEACON_LOG_DIR/log \
+--logfile-debug-level=warn \
+--logfile-max-size 20 \
+--logfile-max-number 10 \
+--log-color \
+--target-peers 20 \
 --suggested-fee-recipient=$FEE_RECIPIENT \
 --checkpoint-sync-url=$LIGHTHOUSE_CHECKPOINT_URL \
 --http
@@ -213,6 +232,12 @@ ExecStart=$LIGHTHOUSE_DIR/lighthouse/lh bn \
 [Install]
 WantedBy=multi-user.target
 EOT
+
+sudo mkdir /var/log/lighthouse
+sudo ln -s $LIGHTHOUSE_BEACON_LOG_DIR/ /var/log/lighthouse
+sudo ln -s $LIGHTHOUSE_VALIDATOR_DATA/validators/logs /var/log/lighthouse
+sudo ln -s $LIGHTHOUSE_VALIDATOR_DATA/validators/logs $LIGHTHOUSE_DIR/logs/validator
+sudo ln -s /var/log/lighthouse/logs /var/log/lighthouse/validator
 
 sudo systemctl daemon-reload
 sudo systemctl enable lighthouse-beacon
@@ -231,8 +256,14 @@ Group=$NODE_USER
 Type=simple
 Restart=always
 RestartSec=5
-ExecStart=$LIGHTHOUSE_DIR/lighthouse/lh vc \
+ExecStart=$LIGHTHOUSE_DIR/bin/lighthouse validator \
 --network $LIGHTHOUSE_CHAIN \
+--datadir=$LIGHTHOUSE_VALIDATOR_DATA \
+--beacon-nodes=http://localhost:5052 \
+--logfile-debug-level=warn \
+--logfile-max-number=10 \
+--logfile-max-size=20 \
+--log-color \
 --suggested-fee-recipient=$FEE_RECIPIENT
 
 [Install]
@@ -245,19 +276,19 @@ sudo systemctl enable lighthouse-validator
 #sudo systemctl status lighthouse-validator
 
 # make sure the new user (running the clients) has rust env stuff
-sudo mkdir /home/$NODE_USER/.cargo
-sudo chown $NODE_USER:$NODE_USER /home/$NODE_USER/.cargo
-sudo cp -R ~/.cargo/* /home/$NODE_USER/.cargo
+#sudo mkdir /home/$NODE_USER/.cargo
+#sudo chown $NODE_USER:$NODE_USER /home/$NODE_USER/.cargo
+#sudo cp -R ~/.cargo/* /home/$NODE_USER/.cargo
 
 echo -e "\nstep 5: setting up firewall to allow node connections (make sure you open them on your network firewall too)\n"
 
 # firewall rules to allow go-pulse and lighthouse services
-sudo ufw allow 30303/tcp
-sudo ufw allow 30303/udp
-sudo ufw allow 9000/tcp
-sudo ufw allow 9000/udp
+#sudo ufw allow 30303/tcp
+#sudo ufw allow 30303/udp
+#sudo ufw allow 9000/tcp
+#sudo ufw allow 9000/udp
 
-echo -e "\nAlmost done! Follow these next steps (as described in the notes) to finish setup and be the best validator you can be :)\n"
+echo -e "\nAlmost done! Follow these next steps (as described in the notes ***AND MAKE SURE TO ADD --datadir=/opt/lighthouse/data TO THE lighthouse account validator import command!!***) to finish setup and be the best validator you can be :)\n"
 
 echo -e "- Generate validator keys with deposit tool ON A SECURE, DIFFERENT MACHINE\n"
 echo -e "- Import them into lighthouse via 'lighthouse account validator import --directory ~/validator_keys --network=pulsechain_testnet_v4' AS THE NODE USER\n"

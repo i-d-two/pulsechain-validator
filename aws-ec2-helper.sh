@@ -7,6 +7,6 @@
 
 NEW_HOSTNAME="elvalidator" # CHANGE ME to whatever you want to name the server
 
-sudo hostname $NEW_HOSTNAME
+sudo hostnamectl set-hostname --static $NEW_HOSTNAME
 touch ~/.hushlogin # quiet
 sudo apt-get update && sudo apt-get upgrade -y && sudo reboot
