@@ -126,14 +126,14 @@ git clone $GETH_REPO
 sleep 0.5 # ugh, wait
 cd $GETH_REPO_NAME
 make
-mkdir -p $GETH_DIR
-mv $GETH_REPO_NAME/build/bin $GETH_DIR
+sudo mkdir -p $GETH_DIR
+sudo mv $GETH_REPO_NAME/build/bin $GETH_DIR
 
 # add geth to path
 #export PATH=$PATH:$GETH_DIR/bin
 
 # geth data directory
-mkdir -p $GETH_DATA
+sudo mkdir -p $GETH_DATA
 sudo chown -R $NODE_USER:$NODE_USER $GETH_DIR
 
 sudo tee /etc/systemd/system/geth.service > /dev/null <<EOT
