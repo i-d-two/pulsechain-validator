@@ -127,7 +127,7 @@ sleep 0.5 # ugh, wait
 cd $GETH_REPO_NAME
 make
 sudo mkdir -p $GETH_DIR
-sudo mv $GETH_REPO_NAME/build/bin $GETH_DIR
+sudo mv ./build/bin $GETH_DIR
 
 # add geth to path
 #export PATH=$PATH:$GETH_DIR/bin
