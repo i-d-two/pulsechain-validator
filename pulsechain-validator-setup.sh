@@ -235,7 +235,7 @@ EOT
 
 sudo mkdir /var/log/lighthouse
 sudo ln -s $LIGHTHOUSE_BEACON_LOG_DIR/ /var/log/lighthouse
-sudo ln -s $LIGHTHOUSE_VALIDATOR_DATA/validators/logs /var/log/lighthouse
+sudo ln -s $LIGHTHOUSE_VALIDATOR_DATA/validators/logs /var/log/lighthouse/validator
 sudo ln -s $LIGHTHOUSE_VALIDATOR_DATA/validators/logs $LIGHTHOUSE_DIR/logs/validator
 sudo ln -s /var/log/lighthouse/logs /var/log/lighthouse/validator
 
