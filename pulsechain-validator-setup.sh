@@ -68,7 +68,6 @@ LIGHTHOUSE_BIN_DIR="/opt/lighthouse/bin"
 LIGHTHOUSE_BEACON_DATA="/opt/lighthouse/data"
 LIGHTHOUSE_BEACON_LOG_DIR="/opt/lighthouse/logs/beacon"
 LIGHTHOUSE_VALIDATOR_DATA="/opt/lighthouse/data"
-LIGHTHOUSE_WALLET_DATA="/opt/lighthouse/wallet"
 
 LIGHTHOUSE_REPO="https://gitlab.com/pulsechaincom/lighthouse-pulse.git"
 LIGHTHOUSE_REPO_NAME="lighthouse-pulse"
@@ -187,7 +186,6 @@ sudo mv ~/.cargo/bin/lighthouse $LIGHTHOUSE_BIN_DIR
 # setup lighthouse beacon data and log, validator data and wallet directories
 sudo mkdir -p $LIGHTHOUSE_BEACON_LOG_DIR
 sudo mkdir -p $LIGHTHOUSE_VALIDATOR_DATA
-sudo mkdir -p $LIGHTHOUSE_WALLET_DATA
 
 sudo chown -R $NODE_USER:$NODE_USER $LIGHTHOUSE_DIR
 
