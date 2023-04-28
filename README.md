@@ -1,4 +1,4 @@
-# PulseChain Testnet Validator Node Setup Helper Scripts
+# PulseChain Testnet Validator Node Setup Scripts
 
 ![pls-testnet-validator-htop](https://user-images.githubusercontent.com/100790377/229965674-75593b5a-3fa6-44fe-8f47-fc25e9d3ce21.png)
 
@@ -105,6 +105,7 @@ cat > validator_keys.b64 <<EOF
 Paste the output
 [Enter] + type “EOF” + [Enter]
 base64 -d validator_keys.b64 > validator_keys.zip
+unzip validator_keys.zip
 ```
 
 **Start the beacon and validator clients**
@@ -226,6 +227,12 @@ Be careful! It deletes and resets things, so read the code and make sure you und
 # AWS EC2 Helper Script
 Just some nice-to-haves if you're using the AWS Cloud for your validator server.
 
+# Client Update Script
+
+It stops the client services, pulls updates from Gitlab, rebuilds the clients and starts the services back again. Only supports Geth and Lighthouse.
+
+Note: **validator will be offline for likely 1 hour while the updates are taking place**, so before you run this script, make sure you understand and are OK with that.
+
 # AWS Cloud Setup
 * [How to run a cloud server on AWS](https://docs.google.com/document/d/1eW0SDT8IvZrla7gywK32Rl3QaQtVoiOu5OaVhUKIDg8/edit)
 
@@ -297,7 +304,7 @@ Also see the guides below for additional help (scripts were mostly based on thos
 * https://schh.medium.com/port-forwarding-via-ssh-ba8df700f34d
 
 # Community Guides and Scripts
-* https://gitlab.com/davidfeder/validatorscript/-/blob/5fa11c7f81d8292779774b8dff9144ec3e44d26a/PulseChain_V3_Script.txt
+* https://gitlab.com/davidfeder/validatorscript/-/blob/64f37685908a78c5337f8d3dc951f7f01f251697/PulseChain_V4_Script.txt
 * https://www.hexpulse.info/docs/node-setup.html
 * https://togosh.medium.com/pulsechain-validator-setup-guide-70edae00b344
 * https://github.com/tdslaine/install_pulse_node
