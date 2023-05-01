@@ -16,7 +16,9 @@ Scripts and guidance available include...
 - PulseChain Validator setup (~85% entire process automated)
 - Use the staking deposit client
 - Grafana and Prometheus monitoring setup
-- Updating your clients
+- Setting up an AWS cloud server
+- Updating your client versions to the latest
+- Updating your fee recipient and IP address
 - Enabling local RPC for Metamask
 
 The setup script installs pre-reqs, golang, rust, go-pulse (geth fork) and lighthouse on a fresh, clean Ubuntu OS for getting a PulseChain Testnet (V4) Validator Node setup and running with **Geth (go-pulse)** and **Lighthouse** clients.
@@ -29,8 +31,47 @@ You can run **pulsechain-validator-setup.sh** to setup your validator clients an
 
 Note: the pulsechain validator setup script doesn't install monitoring/metrics packages, however a script to do that is provided. It would need to run the validator setup script AND THEN run the monitoring-setup.sh script provided. Do not run the monitoring script before installing your validator clients. See details in the [Grafana or Prometheus](https://github.com/rhmaxdotorg/pulsechain-validator#setting-up-monitoring-with-prometheus-and-grafana) section.
 
-# Video Walkthrough
+# Table of Contents
+
+* [PulseChain Testnet Validator Node Setup Scripts](#pulsechain-testnet-validator-node-setup-scripts)
+* [Description](#description)
+* [Walkthrough](#walkthrough)
+* [Usage](#usage)
+   * [Command line options](#command-line-options)
+* [Environment](#environment)
+* [Hardware](#hardware)
+* [After running the script](#after-running-the-script)
+* [Debugging](#debugging)
+   * [Check the Blockchain Sync Progress](#check-the-blockchain-sync-progress)
+      * [Geth](#geth)
+      * [Lighthouse](#lighthouse)
+   * [Look at Client Service Status](#look-at-client-service-status)
+* [Reset Validator Script](#reset-validator-script)
+* [AWS EC2 Helper Script](#aws-ec2-helper-script)
+* [Client Update Script](#client-update-script)
+* [Fee Recipient and IP Address Update Script](#fee-recipient-and-ip-address-update-script)
+* [RPC Interface Script](#rpc-interface-script)
+* [AWS Cloud Setup](#aws-cloud-setup)
+* [Staking Deposit Client Walkthrough](#staking-deposit-client-walkthrough)
+* [Details for all PulseChain clients (/w Ethereum Testnet notes)](#details-for-all-pulsechain-clients-w-ethereum-testnet-notes)
+* [Setting up monitoring with Prometheus and Grafana](#setting-up-monitoring-with-prometheus-and-grafana)
+   * [Web UI setup](#web-ui-setup)
+* [Community Guides, Scripts and Dashboards](#community-guides-scripts-and-dashboards)
+* [Security](#security)
+* [Networking](#networking)
+   * [Server](#server)
+* [Home Router](#home-router)
+   * [AWS Cloud](#aws-cloud)
+* [Graffiti](#graffiti)
+* [Backups](#backups)
+   * [Home](#home)
+   * [Cloud](#cloud)
+* [FAQ](#faq)
+* [Additional Resources and References](#additional-resources-and-references)
+
+# Walkthrough
 Check out these videos for further explanations and code walkthroughs.
+- https://www.youtube.com/watch?v=6-ePJXAUfdg
 - https://www.youtube.com/watch?v=X0TnkLt4E3w
 - https://www.youtube.com/watch?v=QqcDs8llyyw
 - https://www.youtube.com/watch?v=YFOxf4B27Zs
@@ -40,12 +81,12 @@ Check out these videos for further explanations and code walkthroughs.
 # Usage
 
 ```
-$ ./pulsechain-validator-setup.sh [0x...YOUR ETHEREUM FEE ADDRESS] [12.89...YOUR SERVER IP ADDRESS]
+$ ./pulsechain-validator-setup.sh [0x...YOUR NETWORK FEE ADDRESS] [12.89...YOUR SERVER IP ADDRESS]
 ```
 
 ## Command line options
 
-- **ETHEREUM FEE ADDRESS** is the FEE_RECIPIENT value for --suggested-fee-recipient to a wallet address you want to recieve priority fees from users whenever your validator proposes a new block (else it goes to the burn address)
+- **NETWORK FEE ADDRESS** is the FEE_RECIPIENT value for --suggested-fee-recipient to a wallet address you want to recieve priority fees from users whenever your validator proposes a new block (else it goes to the burn address)
 
 - **SERVER_IP_ADDRESS** to your validator server's IP address
 
@@ -242,6 +283,10 @@ It stops the client services, pulls updates from Gitlab, rebuilds the clients an
 
 Note: **validator will be offline for likely 1 hour while the updates are taking place**, so before you run this script, make sure you understand and are OK with that.
 
+# Fee Recipient and IP Address Update Script
+
+This one allows you to update the network fee recipient and server IP address for Lighthouse. These were specified during the initial PulseChain validator setup, however both of them may change for you over time, so the script allows you to easily update them and restart the clients.
+
 # RPC Interface Script
 
 Enables the RPC interface so you can use your own node in Metamask (support for Firefox only). Running your own node and using it can be used for testing purposes, not relying on public servers or bypassing slow, rate limited services by "doing it yourself".
@@ -341,20 +386,24 @@ Staking Dashboard
 Now you can browse the Dashboards and see various stats and data!
 
 Also see the guides below for additional help (scripts were mostly based on those instructions)
-* https://www.coincashew.com/coins/overview-eth/guide-or-how-to-setup-a-validator-on-eth2-mainnet/part-i-installation/monitoring-your-validator-with-grafana-and-prometheus
-* https://schh.medium.com/port-forwarding-via-ssh-ba8df700f34d
-* https://github.com/raskitoma/pulse-staking-dashboard
+- https://www.coincashew.com/coins/overview-eth/guide-or-how-to-setup-a-validator-on-eth2-mainnet/part-i-installation/monitoring-your-validator-with-grafana-and-prometheus
+- https://schh.medium.com/port-forwarding-via-ssh-ba8df700f34d
+- https://github.com/raskitoma/pulse-staking-dashboard
 
 # Community Guides, Scripts and Dashboards
-* https://gitlab.com/davidfeder/validatorscript/-/blob/64f37685908a78c5337f8d3dc951f7f01f251697/PulseChain_V4_Script.txt
-* https://www.hexpulse.info/docs/node-setup.html
-* https://togosh.medium.com/pulsechain-validator-setup-guide-70edae00b344
-* https://github.com/tdslaine/install_pulse_node
-* https://github.com/raskitoma/pulse-staking-dashboard
+- https://gitlab.com/davidfeder/validatorscript/-/blob/64f37685908a78c5337f8d3dc951f7f01f251697/PulseChain_V4_Script.txt
+- https://www.hexpulse.info/docs/node-setup.html
+- https://togosh.medium.com/pulsechain-validator-setup-guide-70edae00b344
+- https://github.com/tdslaine/install_pulse_node
+- https://github.com/raskitoma/pulse-staking-dashboard
 
 # Security
-* https://www.youtube.com/watch?v=hHtvCGlPz-o
-* https://www.coincashew.com/coins/overview-eth/guide-or-how-to-setup-a-validator-on-eth2-mainnet/part-i-installation/guide-or-security-best-practices-for-a-eth2-validator-beaconchain-node
+
+TODO: add validator security ama video here after live stream
+
+References
+- https://www.youtube.com/watch?v=hHtvCGlPz-o
+- https://www.coincashew.com/coins/overview-eth/guide-or-how-to-setup-a-validator-on-eth2-mainnet/part-i-installation/guide-or-security-best-practices-for-a-eth2-validator-beaconchain-node
 
 # Networking
 There are ports that need to be exposed to the Internet for your validator to operate, specially for Geth and Lighthouse it's TCP/UDP ports 30303 and 9000 respectively. There are two common ways to control the firewall on your network: the Linux server and the network (such as your router or gateway to the Internet).
@@ -380,6 +429,70 @@ This depends on your router device and model, so you'll need to research how to 
 - For Prysm (or Lighthouse), we need to open up TCP ports 9000 and 13000 as well as UDP port 12000
 - All with Source=0.0.0.0/24 or Anywhere (unless you want to restrict SSH access to your specific IP range, but that's out of scope here)
 
+# Graffiti
+
+You can add graffiti flags for simple, one-line messages or ask Lighthouse to read from a file to express yourself in text for blocks your validator helps create. By default, the script does not set graffiti flags, but you can do this manually by editing the Lighthouse service files and adding in the flags and values that you want.
+
+Check out the Lighthouse manual page on [graffiti](https://lighthouse-book.sigmaprime.io/graffiti.html) for instructions on how it works.
+
+**Example**
+```
+$ sudo pico /etc/systemd/system/lighthouse-beacon.service
+
+add something like this to the ExecStart= command (line 12)
+
+ --graffiti "richard heart was right"
+
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart lighthouse-beacon
+```
+
+# Backups
+
+## Home
+You can use various tools on Linux to make scheduled backups to another disk OR another server.
+
+References
+- https://helpdeskgeek.com/linux-tips/5-ways-to-automate-a-file-backup-in-linux/
+- https://www.howtogeek.com/135533/how-to-use-rsync-to-backup-your-data-on-linux/
+- https://averagelinuxuser.com/automatically-backup-linux/
+- https://www.math.cmu.edu/~gautam/sj/blog/20200216-rsync-backups.html
+- https://www.simplified.guide/linux/automatic-backup
+
+## Cloud
+**Snapshots**
+- AWS Home
+- EC2 -> Instances -> (Select validator server’s Instance ID)
+- Storage tab (near bottom)
+- Click the Volume ID (to filter by it)
+- Click the Volume ID (again)
+- Actions -> Create Snapshot
+- Description: (current date, for example 5/5/55)
+- Create Snapshot
+
+You should see in green...
+- Successfully created snapshot snap-aaaabbbb from volume vol-xxxxyyyy.
+
+It will be in Pending status for a while before the process completes (could be a few hours).
+
+**Using a Snapshot**
+- EC2 -> Snapshots
+- Click on the Snapshot ID (see description to identify the right one, set Name as appropriate)
+- Now you can do things like create a volume from the snapshot (and use the snapshot)
+- Create a new volume from the snapshot
+- Go back to volumes and name it like pulsechain-testnet-v4-snapshot-050523
+- Spin up another server with the same hardware
+- Create a new server (instance)
+- Go to the new instance and detach the initially created volume
+- EC2 -> Volumes -> Select the volume created from the snapshot
+- Actions -> Attach volume
+- Select the new instance (just created)
+- Device name: /dev/sda1
+- Click Attach volume
+- Now start the new instance
+
+You now have a new server with a hard disk volume based on the snapshot of the other server, yay!
+
 # FAQ
 
 * What server specs do you need to be a validator?
@@ -389,6 +502,12 @@ Specs and preferences vary between who you talk to, but at least 32gb ram and a 
 * How long does it take to sync the blockchain clients?
 
 It depends on your bandwidth, server specs and the state of the network, but you should expect anywhere from 24 - 96hrs for a validator node to sync.
+
+* Can I run more than (1) validator on a single server?
+
+Yes, you can run as many validators as you want on your server. Only caveat being that if you plan to run 100+, you may want to double the specs (at least memory) on your hardware to account for any additional resource usage. If you plan on running 1 or 10 or even 50, the minimum recommended hardware specs will probably work.
+
+The setup script has no dependencies on the number of validators you run, it simply installs the clients and when you generate your validator keys with the staking deposit tool, there you choose the specific number you want to run. It could be 1, 5, 10 or 100. Then, when you import your keys to Lighthouse, you will import each key and it will configure the client to run that number of validators.
 
 * How can I see the stats on my validator(s)?
 

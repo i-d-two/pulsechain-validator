@@ -7,10 +7,10 @@
 # for getting a PulseChain Testnet (V4) Validator Node setup and running.
 #
 # Usage
-# $ ./pulsechain-testnet-validator-setup.sh [0x...YOUR ETHEREUM FEE ADDRESS] [12.89...YOUR SERVER IP ADDRESS] [2404:6800..V6 IP]
+# $ ./pulsechain-testnet-validator-setup.sh [0x...YOUR PULSECHAIN FEE ADDRESS] [12.89...YOUR SERVER IP ADDRESS] [2404:6800..V6 IP]
 #
 # Command line options
-# - ETHEREUM FEE ADDRESS is the FEE_RECIPIENT value for --suggested-fee-recipient to a wallet address you want
+# - PULSECHAIN FEE ADDRESS is the FEE_RECIPIENT value for --suggested-fee-recipient to a wallet address you want
 # to recieve priority fees from users whenever your validator proposes a new block (else it goes to the burn address)
 #
 # - SERVER_IP_ADDRESS to your validator server's IP address
@@ -78,13 +78,20 @@ LIGHTHOUSE_CHECKPOINT_URL="https://checkpoint.v4.testnet.pulsechain.com"
 
 ################################################################
 
-#set -e
-
 trap sigint INT
 
 function sigint() {
     exit 1
 }
+
+# initial check for script arguments (fee address and IP options)
+if [ -z "$2" ]; then
+    echo "* requires fee address and IP args, read the script notes and try again"
+    exit 1
+fi
+
+FEE_RECIPIENT=$1
+SERVER_IP_ADDRESS=$2
 
 echo -e "PulseChain TESTNET V4 Validator Setup\n"
 echo -e "Note: this is a HELPER SCRIPT (some steps still need completed manually, see notes after script is finished)\n"
