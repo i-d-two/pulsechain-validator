@@ -148,6 +148,7 @@ Group=$NODE_USER
 Type=simple
 Restart=always
 RestartSec=5
+TimeoutStopSec=600
 ExecStart=$GETH_BIN/geth \
 --$GETH_CHAIN \
 --datadir=$GETH_DATA \
