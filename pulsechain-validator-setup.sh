@@ -161,7 +161,8 @@ ExecStart=$GETH_BIN/geth \
 --datadir=$GETH_DATA \
 --http \
 --http.api=engine,eth,net,admin,debug \
---cache=128 \
+--cache=8192 \
+--db.engine pebble \
 --authrpc.jwtsecret=$JWT_SECRET_DIR/secret\
 
 
