@@ -102,7 +102,7 @@ read -p "Hit [Enter] to continue"
 # keep track of directory where we run the script
 pushd $PWD &>/dev/null
 
-echo -e "\nstep 1: install requirements and setting up golang + rust\n"
+echo -e "\nstep 1: install requirements and set up golang\n"
 
 # install dependencies and setup path
 sudo apt-get update
@@ -112,13 +112,17 @@ sudo snap install --classic go
 echo "export PATH=$PATH:/snap/bin" >> ~/.bashrc
 
 # straight from rustup.rs website /w auto accept default option "-y"
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-source "$HOME/.cargo/env"
+#sudo -u node bash -c "cd \$HOME && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+#curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+#source "$HOME/.cargo/env"
 
-echo -e "\nstep 2: adding node user and generate client secrets"
+echo -e "\nstep 2: adding node user, install rust and generate client secrets"
 
 # add node account to run services
 sudo useradd -m -s /bin/false -d /home/$NODE_USER $NODE_USER
+
+# straight from rustup.rs website /w auto accept default option "-y"
+sudo -u node bash -c "cd \$HOME && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
 
 # generate execution and consensus client secret
 sudo mkdir -p $JWT_SECRET_DIR
@@ -126,7 +130,7 @@ openssl rand -hex 32 | sudo tee $JWT_SECRET_DIR/secret > /dev/null
 sudo chown -R $NODE_USER:$NODE_USER $JWT_SECRET_DIR
 sudo chmod 400 $JWT_SECRET_DIR/secret
 
-echo -e "\nstep 3: setting up and running Go-Pulse (execution client) to start syncing data\n"
+echo -e "\nstep 3: setting up and running Geth (execution client) to start syncing data\n"
 
 # geth setup
 git clone $GETH_REPO
@@ -178,7 +182,7 @@ sudo systemctl start geth
 # sudo systemctl status geth (check status of geth and make sure it started OK)
 # syncing could a few hours or days depending on the server specs and network connection
 
-echo -e "\nstep 4: setting up Lighthouse (beacon and consensus client) -- you need to start/enable it manually AFTER generating and importing your validator keys\n"
+echo -e "\nstep 4: setting up Lighthouse (beacon and validator client)\n"
 
 # go back to the directory where we started the script
 popd
@@ -195,7 +199,6 @@ sudo mv ~/.cargo/bin/lighthouse $LIGHTHOUSE_BIN_DIR
 # setup lighthouse beacon data and log, validator data and wallet directories
 sudo mkdir -p $LIGHTHOUSE_BEACON_LOG_DIR
 sudo mkdir -p $LIGHTHOUSE_VALIDATOR_DATA
-
 sudo chown -R $NODE_USER:$NODE_USER $LIGHTHOUSE_DIR
 
 # make symbolic link to lighthouse (make service binary in ExecStart nicer)

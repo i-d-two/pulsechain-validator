@@ -10,6 +10,10 @@ if [ "$I_KNOW_WHAT_I_AM_DOING" = false ]; then
     exit 1
 fi
 
+GETH_DIR="/opt/geth"
+LIGHTHOUSE_DIR="/opt/lighthouse"
+REMOVE_BLOCKCHAIN_DATA=false
+
 echo -e "ARE YOU SURE YOU WANT TO RESET AND DELETE CLIENT DATA ON THE VALIDATOR?\n"
 read -p "Press [Enter] to Continue"
 
@@ -23,8 +27,14 @@ sudo rm -rf /etc/systemd/system/geth.service
 sudo rm -rf /etc/systemd/system/lighthouse*
 sudo systemctl daemon-reload
 
-# remove client data
-sudo rm -rf /opt/*
+# remove client data (leave blockchain by default)
+if [ "$REMOVE_BLOCKCHAIN_DATA" = false ]; then
+    sudo find $GETH_DIR -mindepth 1 -name data -prune -o -exec rm -rf {} + &>/dev/null
+    sudo find $LIGHTHOUSE_DIR -mindepth 1 -name beacon -prune -o -exec rm -rf {} + &>/dev/null
+else
+    sudo rm -rf $GETH_DIR
+    sudo rm -rf $LIGHTHOUSE_DIR
+fi
 
 # remove the user
 sudo userdel -r node &>/dev/null
