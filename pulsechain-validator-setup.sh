@@ -204,8 +204,6 @@ sudo mkdir -p $LIGHTHOUSE_CONF_DIR
 
 sudo tee $LIGHTHOUSE_CONF_DIR/graffiti_file.txt > /dev/null <<EOT
 default: RHMax FTW
-# public_key1: graffiti1
-# public_key2: graffiti2
 EOT
 
 sudo chown -R $NODE_USER:$NODE_USER $LIGHTHOUSE_DIR
