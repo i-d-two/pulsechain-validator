@@ -49,10 +49,11 @@ Table of Contents
       * [Lighthouse](#lighthouse)
    * [Look at Client Service Status](#look-at-client-service-status)
 * [Reset Validator Script](#reset-validator-script)
-* [AWS EC2 Helper Script](#aws-ec2-helper-script)
+* [New Server Helper Script](#new-server-helper-script)
 * [Client Update Script](#client-update-script)
 * [Fee Recipient and IP Address Update Script](#fee-recipient-and-ip-address-update-script)
 * [RPC Interface Script](#rpc-interface-script)
+* [Snapshot Helper Script](#snapshot-helper-script)
 * [AWS Cloud Setup](#aws-cloud-setup)
 * [Staking Deposit Client Walkthrough](#staking-deposit-client-walkthrough)
 * [Details for all PulseChain clients (/w Ethereum Testnet notes)](#details-for-all-pulsechain-clients-w-ethereum-testnet-notes)
@@ -105,10 +106,10 @@ For example when running Ubuntu on AWS EC2 cloud service, you can expect to hit 
 Just make sure you know what you're doing and manually edit the reset script to bypass the "I don't know what I'm doing" check. It's very straightforward, just read the code, acknowledge you know what the script it doing and **change I_KNOW_WHAT_I_AM_DOING=false to true to get it to run**.
 
 # Environment
-Tested on **Ubuntu 22.04** (on Amazon AWS EC2 /w M2.2Xlarge server) running as a non-root user (ubuntu) with sudo privileges.
+Tested on **Ubuntu 22.04** (Amazon AWS EC2 /w M2.2Xlarge cloud server) running as a non-root user (ubuntu) with sudo privileges.
 
 # Hardware
-The consensus on the minimum *recommended* requirements to run a validator seem to be 32gb RAM, 2TB disk and plenty of processing power (quadcore, xeon/ryzen, 4-8 vCPUs and such). These can come in the form of buying or building your own server and paying an upfront cost, utilities and maintenance OR renting a server from a VPS/cloud provider such as Amazon AWS (M2.2Xlarge server) and paying monthly to use their platform and resources. Both have advantages and disadvantages as well as varying time, monetary and management costs.
+The consensus on the **minimum recommended requirements** to run a validator seem to be **32gb RAM, 2TB disk and plenty of processing power (quadcore, xeon/ryzen, 4-8 vCPUs and such)**. These can come in the form of buying or building your own server and paying an upfront cost, utilities and maintenance OR renting a server from a VPS/cloud provider such as **Amazon AWS (M2.2Xlarge server)** and paying monthly to use their platform and resources. Both have advantages and disadvantages as well as varying time, monetary and management costs.
 
 Could you get by with an old PC under your desk with a $50 battery backup? Maybe, but that would not be *recommended*. I'd rather not skimp on hardware for things that I would plan to run for years and pay for the peace of mind of not worrying about what I'm going to do if X fails one day, wishing I'd started with stronger foundations. If you try and do it right the first time, you might save a lot of time and headache.
 
@@ -292,7 +293,7 @@ This helper script deletes all your validator data so you can try the setup agai
 
 Be careful! It deletes and resets things, so read the code and make sure you understand what it does before using it.
 
-# AWS EC2 Helper Script
+# New Server Helper Script
 Just some nice-to-haves if you're using the AWS Cloud for your validator server.
 
 # Client Update Script
@@ -328,6 +329,33 @@ Click the Network drop-down, then Add Network and Add a Network Manaully.
 - Save
 
 Now you can use your own node for transactions on the network that your validator is participating in.
+
+# Snapshot Helper Script
+
+Takes a snapshot of blockchain data on a fully synced validator so it can be copied over and used to bootstrap a new validator. Clients must be stopped until the snapshot completes, afterwards they will be restarted so the validator can resume normal operation.
+
+After running the script, copy the geth.tar.xz and lighthouse.tar.xz (compressed blockchain data, kinda like ZIP files) over to the new validator server (see scp demo below OR use a USB stick).
+
+```
+$ scp -i key.pem geth.tar.xz ubuntu@new-validator-server-ip:/home/ubuntu
+$ scp -i key.pem lighthouse.tar.xz ubuntu@new-validator-server-ip:/home/ubuntu
+```
+
+Copying over the network could take anywhere from 1 hour to a few hours (depending on the bandwidth of your server's network).
+
+Then you can run the following commands ON THE NEW SERVER
+
+```
+$ tar -xJf geth.tar.xz
+$ tar -xJf lighthouse.tar.xz
+$ sudo chown -R node:node data beacon
+$ sudo mv data /opt/geth
+$ sudo mv beacon /opt/lighthouse/data
+```
+
+The geth.tar.xz file is likely going to be > 100gb and the lighthouse compressed file probably smaller, but prepare for ~200gb of data total for the transfer.
+
+Note: this should work fine for Ethereum too as it's just copying the blockchain data directories for Geth and Lighthouse, but the scenario is technically untested. Also, this relies on the new validator setup (which you are copying the snapshot to) to be setup with this repo's setup script.
 
 # AWS Cloud Setup
 * [How to run a cloud server on AWS](https://docs.google.com/document/d/1eW0SDT8IvZrla7gywK32Rl3QaQtVoiOu5OaVhUKIDg8/edit)
@@ -408,6 +436,9 @@ Also see the guides below for additional help (scripts were mostly based on thos
 - https://schh.medium.com/port-forwarding-via-ssh-ba8df700f34d
 - https://github.com/raskitoma/pulse-staking-dashboard
 
+You can also setup **email alerts** on Grafana. See guide at the link below.
+- https://thriftly.io/docs/components/Thriftly-Deployment-Beyond-the-Basics/Metrics-Prometheus/Creating-Receiving-Email-Alerts.html
+
 # Community Guides, Scripts and Dashboards
 - https://www.gammadevops.com/p/validator-setup
 - https://gitlab.com/davidfeder/validatorscript/-/blob/64f37685908a78c5337f8d3dc951f7f01f251697/PulseChain_V4_Script.txt
@@ -418,6 +449,17 @@ Also see the guides below for additional help (scripts were mostly based on thos
 
 # Security
 
+If running a validator in the cloud, there's already isolation away from your home network and the devices connected to it. However, if running a validator on your home network, the game is to keep attackers off of your home network. This is much easier when you're not inviting the public to connect to your server that sits on your network at home, but with validators, you're naturally exposing infrastructure running on your own network, which may be the same one you connect your personal devices to as well.
+
+Recommended that if running a validator at home, you isolate it from everything else on your home network using another router into the mix, cascading routers or using VLANs and other kinds of network isolation or "guest" networks.
+
+See references below for more information.
+- https://www.mbreviews.com/cascading-routers/
+- https://www.michaelhorowitz.com/second.router.for.wfh.php
+- https://about.gitlab.com/handbook/security/network-isolation/
+- https://www.routersecurity.org/vlan.php
+
+**Validator Security AMA**
 - https://www.youtube.com/watch?v=o3V052VvI4o
 
 References
@@ -542,6 +584,14 @@ https://beacon.v4.testnet.pulsechain.com/validator/0x...
 ```
 
 And you can see it’s going from Active to Exit (pulsing green).
+
+Once it's exited, you have to wait for Withdrawals to become available.
+
+```
+This validator has exited the system during epoch 5369 and is no longer validating.
+
+There is no need to keep the validator running anymore. Funds will be withdrawable after epoch 5555. 
+```
 
 References
 - https://lighthouse-book.sigmaprime.io/voluntary-exit.html
