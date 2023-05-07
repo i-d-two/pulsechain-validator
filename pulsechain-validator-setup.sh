@@ -65,6 +65,7 @@ JWT_SECRET_DIR="/var/lib/jwt"
 # lighthouse config
 LIGHTHOUSE_DIR="/opt/lighthouse"
 LIGHTHOUSE_BIN_DIR="/opt/lighthouse/bin"
+LIGHTHOUSE_CONF_DIR="/opt/lighthouse/conf.d"
 LIGHTHOUSE_BEACON_DATA="/opt/lighthouse/data"
 LIGHTHOUSE_BEACON_LOG_DIR="/opt/lighthouse/logs/beacon"
 LIGHTHOUSE_VALIDATOR_DATA="/opt/lighthouse/data"
@@ -199,6 +200,14 @@ sudo mv ~/.cargo/bin/lighthouse $LIGHTHOUSE_BIN_DIR
 # setup lighthouse beacon data and log, validator data and wallet directories
 sudo mkdir -p $LIGHTHOUSE_BEACON_LOG_DIR
 sudo mkdir -p $LIGHTHOUSE_VALIDATOR_DATA
+sudo mkdir -p $LIGHTHOUSE_CONF_DIR
+
+sudo tee $LIGHTHOUSE_CONF_DIR/graffiti_file.txt > /dev/null <<EOT
+default: RHMax FTW
+# public_key1: graffiti1
+# public_key2: graffiti2
+EOT
+
 sudo chown -R $NODE_USER:$NODE_USER $LIGHTHOUSE_DIR
 
 # make symbolic link to lighthouse (make service binary in ExecStart nicer)
@@ -273,6 +282,7 @@ ExecStart=$LIGHTHOUSE_DIR/bin/lighthouse validator \
 --logfile-max-number=10 \
 --logfile-max-size=20 \
 --log-color \
+--graffiti-file $LIGHTHOUSE_CONF_DIR/graffiti_file.txt \
 --suggested-fee-recipient=$FEE_RECIPIENT
 
 [Install]
