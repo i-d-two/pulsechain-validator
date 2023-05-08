@@ -68,6 +68,7 @@ LIGHTHOUSE_BIN_DIR="/opt/lighthouse/bin"
 LIGHTHOUSE_CONF_DIR="/opt/lighthouse/conf.d"
 LIGHTHOUSE_BEACON_DATA="/opt/lighthouse/data"
 LIGHTHOUSE_BEACON_LOG_DIR="/opt/lighthouse/logs/beacon"
+LIGHTHOUSE_BEACON_SLASHER_DIR="$LIGHTHOUSE_BEACON_DATA/beacon/slasher_db"
 LIGHTHOUSE_VALIDATOR_DATA="/opt/lighthouse/data"
 
 LIGHTHOUSE_REPO="https://gitlab.com/pulsechaincom/lighthouse-pulse.git"
@@ -242,6 +243,9 @@ ExecStart=$LIGHTHOUSE_BIN_DIR/lighthouse beacon \
 --logfile-max-number 10 \
 --log-color \
 --target-peers 20 \
+--slasher \
+--slasher-dir=$LIGHTHOUSE_BEACON_SLASHER_DIR \
+--slasher-backend=mdbx \
 --suggested-fee-recipient=$FEE_RECIPIENT \
 --checkpoint-sync-url=$LIGHTHOUSE_CHECKPOINT_URL \
 --http
