@@ -10,6 +10,8 @@ To download these scripts on your server, you can `git clone https://github.com/
 
 After you download the code, you may need to `chmod +x *.sh` to make all the scripts executable and able to run on the system.
 
+**Once you’re finished running the setup script, go to [After running the script](#after-running-the-script) section to complete the process and get your validator on the network.**
+
 # Description
 
 Scripts and guidance available include...
@@ -20,6 +22,8 @@ Scripts and guidance available include...
 - Updating your client versions to the latest
 - Updating your fee recipient and IP address
 - Enabling local RPC for Metamask
+- Withdrawals and exiting the network
+- Snapshot synced blockchain data and server backups
 
 The setup script installs pre-reqs, golang, rust, go-pulse (geth fork) and lighthouse on a fresh, clean Ubuntu OS for getting a PulseChain Testnet (V4) Validator Node setup and running with **Geth (go-pulse)** and **Lighthouse** clients.
 
@@ -115,7 +119,13 @@ Could you get by with an old PC under your desk with a $50 battery backup? Maybe
 
 # After running the script
 
-The script automates a roughly estimated ~85% of what it takes to get the validator configured, but there's still a few manual steps you need to do to complete the setup and get the validator on the network.
+The script automates a roughly estimated ~85% of what it takes to get the validator configured, but there's still a few manual steps you need to do to complete the setup: generate your keys in a secure environment, copy and import them on your validator server and once your clients are fully synced, make the deposit to activate your validator on the network.
+
+**Environment and hardware options for key generation**
+* LiveCD that you boot and use (all ephemeral, in-memory, disposable filesystem), recommended as a more secure option
+* Use another machine (spare laptop or device) with a **clean install** of Ubuntu Linux, not connected to the internet (only to download the staking client or use a USB stick to transfer staking over to it) – another fairly secure way of doing it
+* Virtual machine with clean install (less secure and make sure to delete it afterwards)
+* Spin up a free tier cloud image on a cloud provider (see AWS section, less secure, but fast, make sure to destroy it afterwards)
 
 **Generate validator keys with deposit tool and import them into Lighthouse**
 
@@ -346,14 +356,21 @@ Copying over the network could take anywhere from 1 hour to a few hours (dependi
 Then you can run the following commands ON THE NEW SERVER
 
 ```
+$ sudo systemctl stop geth lighthouse-beacon lighthouse-validator
 $ tar -xJf geth.tar.xz
 $ tar -xJf lighthouse.tar.xz
-$ sudo chown -R node:node data beacon
-$ sudo mv data /opt/geth
-$ sudo mv beacon /opt/lighthouse/data
+$ sudo cp -Rf opt /
+$ sudo chown -R node:node /opt
+$ sudo systemctl start geth lighthouse-beacon lighthouse-validator
 ```
 
-The geth.tar.xz file is likely going to be > 100gb and the lighthouse compressed file probably smaller, but prepare for ~200gb of data total for the transfer.
+The geth.tar.xz file is likely going to be > 100gb and the lighthouse compressed file probably smaller, but prepare for ~200gb of data total for the transfer. It can take 4-6 hours to decompress these blockchain data files as well, for example...
+
+```
+$ date; tar -xJf geth.tar.xz; date
+03:32:56 UTC 2023
+07:50:01 UTC 2023
+```
 
 Note: this should work fine for Ethereum too as it's just copying the blockchain data directories for Geth and Lighthouse, but the scenario is technically untested. Also, this relies on the new validator setup (which you are copying the snapshot to) to be setup with this repo's setup script.
 
@@ -675,7 +692,7 @@ For example this validator's stats: https://beacon.v4.testnet.pulsechain.com/val
 
 * What if my validator stops working?
 
-Did your server's IP address change? If so, update lighthouse beacon service file @ /etc/systemd/system/lighthouse-beacon.service.
+Did your server's IP address change? If so, update lighthouse beacon service file @ /etc/systemd/system/lighthouse-beacon.service or use the **update-fee-ip-addr.sh** script to update both the fee address + server IP address.
 
 Did your network/firewall role change? Make sure the required client ports are accessible.
 
