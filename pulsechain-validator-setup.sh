@@ -106,11 +106,7 @@ sudo snap install --classic go
 
 echo "export PATH=$PATH:/snap/bin" >> ~/.bashrc
 
-# straight from rustup.rs website /w auto accept default option "-y"
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
-source "$HOME/.cargo/env"
-
-echo -e "\nstep 2: adding node user, install rust and generate client secrets"
+echo -e "\nstep 2: adding node users, install rust and generate client secrets"
 
 # add node account to run services
 sudo useradd -m -s /bin/false -d /home/$GETH_USER $GETH_USER
@@ -118,6 +114,10 @@ sudo useradd -m -s /bin/false -d /home/$LIGHTHOUSE_USER $LIGHTHOUSE_USER
 sudo groupadd $NODE_GROUP
 sudo usermod -aG $NODE_GROUP $GETH_USER
 sudo usermod -aG $NODE_GROUP $LIGHTHOUSE_USER
+
+# straight from rustup.rs website /w auto accept default option "-y"
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+source "$HOME/.cargo/env"
 
 # generate execution and consensus client secret
 sudo mkdir -p $JWT_SECRET_DIR
