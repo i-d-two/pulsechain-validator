@@ -42,7 +42,9 @@ if [ -z "$3" ]; then
 fi
 
 # general config
-NODE_USER="node"
+GETH_USER="geth"
+LIGHTHOUSE_USER="lighthouse"
+NODE_GROUP="node"
 FEE_RECIPIENT=$1
 SERVER_IP_ADDRESS=$2
 SERVER_IPv6_ADDRESS=$3
@@ -121,16 +123,20 @@ echo "export PATH=$PATH:/snap/bin" >> ~/.bashrc
 echo -e "\nstep 2: adding node user, install rust and generate client secrets"
 
 # add node account to run services
-sudo useradd -m -s /bin/false -d /home/$NODE_USER $NODE_USER
+sudo useradd -m -s /bin/false -d /home/$GETH_USER $GETH_USER
+sudo useradd -m -s /bin/false -d /home/$LIGHTHOUSE_USER $LIGHTHOUSE_USER
+sudo groupadd $NODE_GROUP
+sudo usermod -aG $NODE_GROUP $GETH_USER
+sudo usermod -aG $NODE_GROUP $LIGHTHOUSE_USER
 
 # straight from rustup.rs website /w auto accept default option "-y"
-sudo -u $NODE_USER bash -c "cd \$HOME && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
 
 # generate execution and consensus client secret
 sudo mkdir -p $JWT_SECRET_DIR
 openssl rand -hex 32 | sudo tee $JWT_SECRET_DIR/secret > /dev/null
-sudo chown -R $NODE_USER:$NODE_USER $JWT_SECRET_DIR
-sudo chmod 400 $JWT_SECRET_DIR/secret
+sudo chown -R root:$NODE_GROUP $JWT_SECRET_DIR
+sudo chmod 440 $JWT_SECRET_DIR/secret
 
 echo -e "\nstep 3: setting up and running Geth (execution client) to start syncing data\n"
 
@@ -147,7 +153,7 @@ sudo mv ./build/bin $GETH_DIR
 
 # geth data directory
 sudo mkdir -p $GETH_DATA
-sudo chown -R $NODE_USER:$NODE_USER $GETH_DIR
+sudo chown -R $GETH_USER:$GETH_USER $GETH_DIR
 
 sudo tee /etc/systemd/system/geth.service > /dev/null <<EOT
 [Unit]
@@ -156,8 +162,8 @@ After=network.target
 Wants=network.target
 
 [Service]
-User=$NODE_USER
-Group=$NODE_USER
+User=$GETH_USER
+Group=$GETH_USER
 Type=simple
 Restart=always
 RestartSec=5
@@ -207,7 +213,7 @@ sudo tee $LIGHTHOUSE_CONF_DIR/graffiti_file.txt > /dev/null <<EOT
 default: RHMax FTW
 EOT
 
-sudo chown -R $NODE_USER:$NODE_USER $LIGHTHOUSE_DIR
+sudo chown -R $LIGHTHOUSE_USER:$LIGHTHOUSE_USER $LIGHTHOUSE_DIR
 
 # make symbolic link to lighthouse (make service binary in ExecStart nicer)
 # sudo -u $NODE_USER ln -s /home/$NODE_USER/.cargo/bin/lighthouse /opt/lighthouse/lighthouse/lh
@@ -219,8 +225,8 @@ After=network.target
 Wants=network.target
 
 [Service]
-User=$NODE_USER
-Group=$NODE_USER
+User=$LIGHTHOUSE_USER
+Group=$LIGHTHOUSE_USER
 Type=simple
 Restart=always
 RestartSec=5
@@ -271,8 +277,8 @@ After=network.target
 Wants=network.target
 
 [Service]
-User=$NODE_USER
-Group=$NODE_USER
+User=$LIGHTHOUSE_USER
+Group=$LIGHTHOUSE_USER
 Type=simple
 Restart=always
 RestartSec=5
