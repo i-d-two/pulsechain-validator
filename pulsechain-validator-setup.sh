@@ -88,15 +88,6 @@ function sigint() {
     exit 1
 }
 
-# initial check for script arguments (fee address and IP options)
-if [ -z "$2" ]; then
-    echo "* requires fee address and IP args, read the script notes and try again"
-    exit 1
-fi
-
-FEE_RECIPIENT=$1
-SERVER_IP_ADDRESS=$2
-
 echo -e "PulseChain TESTNET V4 Validator Setup\n"
 echo -e "Note: this is a HELPER SCRIPT (some steps still need completed manually, see notes after script is finished)\n"
 echo -e "* it could take around 30 minutes to complete -- depending mostly on bandwidth and server specs *\n"
