@@ -230,7 +230,7 @@ ExecStart=$LIGHTHOUSE_BIN_DIR/lighthouse beacon \
 --enr-udp6-port=$LIGHTHOUSE_6PORT \
 --listen-address '0.0.0.0' \
 --listen-address '::' \
---logfile=$LIGHTHOUSE_BEACON_LOG_DIR/log \
+--logfile=$LIGHTHOUSE_BEACON_LOG_DIR/beacon.log \
 --logfile-debug-level=warn \
 --logfile-max-size 20 \
 --logfile-max-number 10 \
